@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import Replicate from "replicate";
+import { validateRequiredFields } from '../../../utils/validation';
+
 
 async function getObjectFromRequestBodyStream(body) {
   const input = await body.getReader().read();
@@ -7,6 +9,8 @@ async function getObjectFromRequestBodyStream(body) {
   const string = decoder.decode(input.value);
   return JSON.parse(string);
 }
+
+import { validateRequiredFields } from '../../../utils/validation';
 
 export default async function handler(req) {
   if (!process.env.REPLICATE_API_TOKEN) {
@@ -20,6 +24,14 @@ export default async function handler(req) {
   const replicate = new Replicate({
     auth: process.env.REPLICATE_API_TOKEN,
   });
+    const err = validateRequiredFields(req.body, ['prompt', 'name', 'description']);
+  if (err) {
+    return new Response(
+      JSON.stringify({ error: err }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
 
   let prediction;
 
